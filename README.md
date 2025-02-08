@@ -21,7 +21,7 @@ You can use this boilerplate however you want but it was designed to support rou
 * [@asottile](https://www.github.com/asottile) for the video/content/expertise that inspired this repo
 * [@bcorfman](https://www.github.com/bcorfman) for [bcorfman/ultraviolet](https://github.com/bcorfman/ultraviolet) which I used to boostrap the repo
 
-A note on the use of `uv`: `uv` builds on top of a bunch of open source work on Python tooling and [that community has mixed feelings](https://www.youtube.com/watch?v=XzW4-KEB664) about how derivatives were built on top of that work (to be clear, as allowed license) and commercialized into @astral-sh, which went on to raise millions of dollars in venture capital. I believe `uv` makes this repo easier to use than alternatives, but hope that Astral finds a way to give back to the Python toolchain development community in the future.
+A note on the use of `uv`: `uv` builds on top of a bunch of open source work on Python tooling and [that community has mixed feelings](https://www.youtube.com/watch?v=XzW4-KEB664) about how derivatives were built on top of that work (to be clear, as allowed license) and commercialized into [Astral](https://astral.sh/), which went on to raise millions of dollars in venture capital. I believe `uv` makes this repo easier to use than alternatives, but hope that Astral finds a way to give back to the Python toolchain development community in the future.
 
 
 ## TODO
