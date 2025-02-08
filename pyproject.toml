@@ -1,0 +1,51 @@
+[project]
+name = "programming-interview-skeleton-py"
+version = "0.1.0"
+description = "programming interview code"
+authors = [{name = "Jacob Scott", email = "jacob.scott@gmail.com"}]
+license = {file="LICENSE"}
+readme = "README.md"
+requires-python = ">= 3.12"
+dependencies = [
+]
+
+[tool.uv]
+dev-dependencies = [
+]
+
+[tool.pytest.ini_options]
+addopts = "--cov-branch --cov-report term --cov=core"
+testpaths = ["tests"]
+filterwarnings = ["ignore::DeprecationWarning"]
+markers=["unit: Unit tests.",
+         "system: System (browser-based) tests."]
+         
+[tool.coverage.run]
+source = ["core"]
+
+[tool.ruff]
+line-length = 120
+fix = true
+target-version = "py312"
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+docstring-code-format = true
+
+[tool.ruff.lint]
+select = [
+    # pycodestyle
+    "E",
+    # Pyflakes
+    "F",
+    # pyupgrade
+    "UP",
+    # flake8-bugbear
+    "B",
+    # flake8-simplify
+    "SIM",
+    # isort
+    "I",
+]
+extend-fixable = ["E", "F", "UP", "B", "SIM", "I"]
