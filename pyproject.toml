@@ -12,18 +12,14 @@ dependencies = [
 [tool.uv]
 dev-dependencies = [
     "pytest>=8.3.4",
-    "pytest-cov>=6.0.0",
 ]
 
 [tool.pytest.ini_options]
-addopts = "--cov-branch --cov-report term --cov=core"
-testpaths = ["tests"]
+python_files = "*.py"
 filterwarnings = ["ignore::DeprecationWarning"]
 markers=["unit: Unit tests.",
          "system: System (browser-based) tests."]
          
-[tool.coverage.run]
-source = ["core"]
 
 [tool.ruff]
 line-length = 120
