@@ -1,7 +1,7 @@
 # A python environment for programming interviews
 **Heavily WIP until this disclaimer is removed**
 
-You can use this boilerplate however you want but it was designed to support roughly the single file workflow suggested by [@asottile](https://www.github.com/asottile) in [how to ace the coding interview (intermediate) anthony explains #358](https://www.youtube.com/watch?v=eVNkO6g0fP8). 
+You can use this boilerplate however you want but it was designed to support roughly the single file workflow suggested by [@asottile](https://www.github.com/asottile) in [how to ace the coding interview (intermediate) anthony explains #358](https://www.youtube.com/watch?v=eVNkO6g0fP8). This environment is optimized for interviews where you can bring your own laptop and has light configuration for VSCode. It has no affordance for LLMs, AI, etc and assumes their use will not be allowed.
 
 `interview/code.py` has been seeded with a few Internet-sourced problems and solutions to show the boilerplate by example and hopefully allow you to focus productively on "step six: implement the thing" (see the video!).
 
