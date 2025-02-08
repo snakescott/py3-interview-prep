@@ -27,4 +27,5 @@ A note on the use of `uv`: `uv` builds on top of a bunch of open source work on 
 ## TODO
 * Add more examples to `code.py` (and update credits/LICENSE as appropriate)
 * Add and document more batteries, like `more_itertools`
+* Integrate with some sort of CI/CD (likely Github Actions) to ensure that tests in `code.py` stay green
 
