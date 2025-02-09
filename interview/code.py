@@ -7,19 +7,16 @@ def is_safe(l: list[int]) -> bool:
     if len(l) <= 1:
         return True
 
-    sentinel = max(l) - min(l)
-    low = sentinel
-    high = -1 * sentinel
-    for w in more_itertools.sliding_window(l, 2):
-        diff = w[0] - w[1]
-        low = min(low, diff)
-        high = max(high, diff)
+    # Can do this more space efficiently at the cost of code complexity
+    deltas = [w[0] - w[1] for w in more_itertools.sliding_window(l, 2)]
+    smallest_delta = min(deltas)
+    largest_delta = max(deltas)
 
-    # Handles cases with no difference as well as different signed diffs
-    if low * high <= 0:
-        return False
-
-    if abs(low) > 3 or abs(high) > 3:
+    # Handles cases
+    # * with no difference (smallest or largest delta is zero)
+    # * smallest/largest different sign (not strictly inc/dec)
+    # * abs difference > 3
+    if smallest_delta * largest_delta <= 0 or abs(smallest_delta) > 3 or abs(largest_delta) > 3:
         return False
 
     return True
