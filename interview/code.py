@@ -75,3 +75,8 @@ def times_two(x: int) -> int:
 )
 def test_hello_world(input: int, expected: int) -> None:
     assert times_two(input) == expected
+
+
+# Allows invocation as a main file, e.g. if using inside coderpad or similar
+if __name__ == "__main__":
+    raise SystemExit(pytest.main([__file__]))
