@@ -1,5 +1,33 @@
+import re
+
 import more_itertools
 import pytest
+
+
+# AOC 2024 day 3
+def parse_d3(x: str) -> int:
+    regex = re.compile(r"mul\((\d+),(\d+)\)")
+    result = 0
+    start = 0
+    while True:
+        match = regex.search(x, start)
+        if match:
+            result += int(match.group(1)) * int(match.group(2))
+            start = match.end()
+        else:
+            break
+    return result
+
+
+@pytest.mark.parametrize(
+    ("input", "expected"),
+    (
+        ("mul(11,8)", 88),
+        ("mul(3,2)uiqhaUHmul(4,5)", 26),
+    ),
+)
+def test_parse_d3(input, expected):
+    assert parse_d3(input) == expected
 
 
 # AOC 2024 day 2
