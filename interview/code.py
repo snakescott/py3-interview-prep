@@ -1,7 +1,56 @@
 import re
+from collections import defaultdict
 
 import more_itertools
 import pytest
+
+# AOC 2024 day 5
+EXAMPLE_D4 = """47|53
+97|13
+97|61
+97|47
+75|29
+61|13
+75|53
+29|13
+97|29
+53|29
+61|53
+97|53
+61|29
+47|13
+75|47
+97|75
+47|61
+75|61
+47|29
+75|13
+53|13""".split("\n")
+
+
+def is_ordered(rules: list[str], updates: str):
+    not_after: dict[int, set[int]] = defaultdict(lambda: set())
+    for rule in rules:
+        a, b = map(int, rule.split("|"))
+        not_after[a].add(b)
+
+    seen: set[int] = set()
+    for update in map(int, updates.split(",")):
+        if seen.intersection(not_after[update]):
+            return False
+        seen.add(update)
+    return True
+
+
+@pytest.mark.parametrize(
+    ("rules", "updates", "expected"),
+    (
+        (EXAMPLE_D4, "75,47,61,53,29", True),
+        (EXAMPLE_D4, "75,97,47,61,53", False),
+    ),
+)
+def test_xmas(rules, updates, expected):
+    assert is_ordered(rules, updates) == expected
 
 
 # AOC 2024 day 3
