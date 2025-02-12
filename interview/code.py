@@ -1,5 +1,6 @@
 import re
 from collections import defaultdict
+from collections.abc import Iterable
 
 import more_itertools
 import pytest
@@ -49,8 +50,72 @@ def is_ordered(rules: list[str], updates: str):
         (EXAMPLE_D4, "75,97,47,61,53", False),
     ),
 )
-def test_xmas(rules, updates, expected):
+def test_ordering(rules, updates, expected):
     assert is_ordered(rules, updates) == expected
+
+
+# AOC 2024 day 4
+
+EXAMPLE_GRID = """
+MMMSXXMASM
+MSAMXMSMSA
+AMXSXMAAMM
+MSAMASMSMX
+XMASAMXAMM
+XXAMMXXAMA
+SMSMSASXSS
+SAXAMASAAA
+MAMMMXMMMM
+MXMXAXMASX
+"""
+
+
+class Grid:
+    def __init__(self, s: str) -> None:
+        self.grid: dict[tuple[int, int], str] = {}
+        rows = list(filter(None, s.split("\n")))
+        for r, row in enumerate(rows):
+            for c, value in enumerate(row):
+                self.grid[(r, c)] = value
+
+        self.num_rows = len(rows)
+        self.num_cols = len(rows[0])
+        self.deltas = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
+
+    def all_points(self) -> Iterable[tuple[int, int]]:
+        for r in range(self.num_rows):
+            for c in range(self.num_cols):
+                yield (r, c)
+
+    def count_str(self, start: tuple[int, int], s: str) -> int:
+        result = 0
+        for delta in self.deltas:
+            p = start
+            aborted = False
+            for c in s:
+                if p not in self.grid or self.grid[p] != c:
+                    aborted = True
+                    break
+                p = (p[0] + delta[0], p[1] + delta[1])
+            if not aborted:
+                result += 1
+        return result
+
+
+def count_xmas(s: str) -> int:
+    g = Grid(s)
+    return sum(g.count_str(p, "XMAS") for p in g.all_points())
+
+
+@pytest.mark.parametrize(
+    ("input", "expected"),
+    (  # force
+        ("XMAS", 1),
+        (EXAMPLE_GRID, 18),
+    ),
+)
+def test_xmas(input, expected):
+    assert count_xmas(input) == expected
 
 
 # AOC 2024 day 3
