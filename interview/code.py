@@ -180,6 +180,36 @@ def test_is_safe(input: list[int], expected: bool) -> None:
     assert is_safe(input) == expected
 
 
+def parse_2024_d2():
+    data = load_input(2024, 2)
+    if not data:
+        return []
+    return [list(map(int, line.split())) for line in data.split("\n")]
+
+
+# Can do in linear time by stitching partial sequences from start and back
+def is_damper_safe(l: list[int]) -> bool:
+    if is_safe(l):
+        return True
+    for idx in range(len(l)):
+        l2 = list(l)
+        del l2[idx]
+        if is_safe(l2):
+            return True
+
+    return False
+
+
+def test_2024_d2_1():
+    l = parse_2024_d2()
+    assert sum(1 if is_safe(x) else 0 for x in l) == 502
+
+
+def test_2024_d2_2():
+    l = parse_2024_d2()
+    assert sum(1 if is_damper_safe(x) else 0 for x in l) == 544
+
+
 # AOC 2024 day 1
 def distance(a: list[int], b: list[int]) -> int:
     a = sorted(a)
