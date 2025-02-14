@@ -89,7 +89,7 @@ class Grid:
             for c in range(self.num_cols):
                 yield (r, c)
 
-    def count_str(self, start: tuple[int, int], s: str) -> int:
+    def count_str(self, start: tuple[int, int], s: str, deltas: list[tuple[int, int]] = None) -> int:
         result = 0
         for delta in self.deltas:
             p = start
@@ -103,10 +103,34 @@ class Grid:
                 result += 1
         return result
 
+    def is_x_mas(self, start: tuple[int, int]) -> bool:
+        if self.grid.get(start) != "A":
+            return False
+
+        diag_a = set([self.grid.get((start[0] - 1, start[1] - 1)), self.grid.get((start[0] + 1, start[1] + 1))])
+        diag_b = set([self.grid.get((start[0] - 1, start[1] + 1)), self.grid.get((start[0] + 1, start[1] - 1))])
+        sm = set(["S", "M"])
+        return diag_a == sm and diag_b == sm
+
 
 def count_xmas(s: str) -> int:
     g = Grid(s)
     return sum(g.count_str(p, "XMAS") for p in g.all_points())
+
+
+def count_x_mas(s: str) -> int:
+    g = Grid(s)
+    return sum(1 if g.is_x_mas(p) else 0 for p in g.all_points())
+
+
+def test_2024_d4_1():
+    data = load_input(2024, 4)
+    assert count_xmas(data) == 2593
+
+
+def test_2024_d4_2():
+    data = load_input(2024, 4)
+    assert count_x_mas(data) == 1950
 
 
 @pytest.mark.parametrize(
