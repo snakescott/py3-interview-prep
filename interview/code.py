@@ -135,6 +135,18 @@ def parse_d3(x: str) -> int:
     return result
 
 
+def parse_d3_do_dont(x: str) -> int:
+    parts = x.split("don't()")
+    if parts:
+        value = parse_d3(parts[0])
+        for p in parts[1:]:
+            start = p.find("do()")
+            if start > 0:
+                value += parse_d3(p[start:])
+        return value
+    return 0
+
+
 @pytest.mark.parametrize(
     ("input", "expected"),
     (
@@ -144,6 +156,20 @@ def parse_d3(x: str) -> int:
 )
 def test_parse_d3(input, expected):
     assert parse_d3(input) == expected
+
+
+def parse_2024_d3():
+    data = load_input(2024, 3)
+    return data or ""
+
+
+def test_2024_d3_1():
+    assert parse_d3(parse_2024_d3()) == 155955228
+
+
+def test_2024_d3_2():
+    data = "".join(parse_2024_d3())
+    assert parse_d3_do_dont(parse_2024_d3()) == 100189366
 
 
 # AOC 2024 day 2
