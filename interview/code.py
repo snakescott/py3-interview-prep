@@ -28,17 +28,16 @@ EXAMPLE_D4 = """47|53
 75|61
 47|29
 75|13
-53|13""".split("\n")
+53|13"""
 
 
-def is_ordered(rules: list[str], updates: str):
+def is_ordered(rules: list[list[int, int]], updates: list[int]):
     not_after: dict[int, set[int]] = defaultdict(lambda: set())
-    for rule in rules:
-        a, b = map(int, rule.split("|"))
+    for a, b in rules:
         not_after[a].add(b)
 
     seen: set[int] = set()
-    for update in map(int, updates.split(",")):
+    for update in updates:
         if seen.intersection(not_after[update]):
             return False
         seen.add(update)
@@ -46,14 +45,28 @@ def is_ordered(rules: list[str], updates: str):
 
 
 @pytest.mark.parametrize(
-    ("rules", "updates", "expected"),
+    ("raw_rules", "raw_updates", "expected"),
     (
         (EXAMPLE_D4, "75,47,61,53,29", True),
         (EXAMPLE_D4, "75,97,47,61,53", False),
     ),
 )
-def test_ordering(rules, updates, expected):
+def test_ordering(raw_rules, raw_updates, expected):
+    rules = [list(map(int, l.split("|"))) for l in raw_rules.split("\n")]
+    updates = list(map(int, raw_updates.split(",")))
     assert is_ordered(rules, updates) == expected
+
+
+def compute_d5_from_raw(s: str) -> int:
+    raw_rules, raw_updates = s.split("\n\n")
+    rules = [list(map(int, l.split("|"))) for l in raw_rules.split("\n")]
+    updates = [list(map(int, raw_update.split(","))) for raw_update in raw_updates.split("\n")]
+    return sum(u[int(len(u) / 2)] for u in updates if is_ordered(rules, u))
+
+
+def test_2024_d5_1():
+    data = load_input(2024, 5)
+    assert compute_d5_from_raw(data) == 6612
 
 
 # AOC 2024 day 4
