@@ -74,22 +74,22 @@ MXMXAXMASX
 
 class Grid:
     def __init__(self, s: str) -> None:
-        self.grid: dict[tuple[int, int], str] = {}
+        self.grid: dict[complex, str] = {}
         rows = list(filter(None, s.split("\n")))
         for r, row in enumerate(rows):
             for c, value in enumerate(row):
-                self.grid[(r, c)] = value
+                self.grid[r + c * 1j] = value
 
         self.num_rows = len(rows)
         self.num_cols = len(rows[0])
-        self.deltas = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
+        self.deltas = [-1 - 1j, -1, -1 + 1j, -1j, 1j, 1 - 1j, 1, 1 + 1j]
 
-    def all_points(self) -> Iterable[tuple[int, int]]:
+    def all_points(self) -> Iterable[complex]:
         for r in range(self.num_rows):
             for c in range(self.num_cols):
-                yield (r, c)
+                yield r + c * 1j
 
-    def count_str(self, start: tuple[int, int], s: str, deltas: list[tuple[int, int]] = None) -> int:
+    def count_str(self, start: complex, s: str) -> int:
         result = 0
         for delta in self.deltas:
             p = start
@@ -98,17 +98,17 @@ class Grid:
                 if p not in self.grid or self.grid[p] != c:
                     aborted = True
                     break
-                p = (p[0] + delta[0], p[1] + delta[1])
+                p = p + delta
             if not aborted:
                 result += 1
         return result
 
-    def is_x_mas(self, start: tuple[int, int]) -> bool:
+    def is_x_mas(self, start: complex) -> bool:
         if self.grid.get(start) != "A":
             return False
 
-        diag_a = set([self.grid.get((start[0] - 1, start[1] - 1)), self.grid.get((start[0] + 1, start[1] + 1))])
-        diag_b = set([self.grid.get((start[0] - 1, start[1] + 1)), self.grid.get((start[0] + 1, start[1] - 1))])
+        diag_a = set([self.grid.get(start - 1 - 1j), self.grid.get(start + 1 + 1j)])
+        diag_b = set([self.grid.get(start + 1 - 1j), self.grid.get(start - 1 + 1j)])
         sm = set(["S", "M"])
         return diag_a == sm and diag_b == sm
 
