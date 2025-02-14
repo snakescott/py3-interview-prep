@@ -1,6 +1,8 @@
+import os
 import re
-from collections import defaultdict
+from collections import Counter, defaultdict
 from collections.abc import Iterable
+from pathlib import Path
 
 import more_itertools
 import pytest
@@ -185,6 +187,36 @@ def distance(a: list[int], b: list[int]) -> int:
     return sum(abs(x[0] - x[1]) for x in zip(a, b, strict=True))
 
 
+def similarity(a: list[int], b: list[int]) -> int:
+    c = Counter(b)
+    return sum(i * c[i] for i in a)
+
+
+def parse_2024_d1():
+    data = load_input(2024, 1)
+    if not data:
+        return [], []
+    lines = data.split("\n")
+    a = []
+    b = []
+    regex = re.compile(r"(\d+) +(\d+)")
+    for line in lines:
+        match = regex.search(line)
+        a.append(int(match.group(1)))
+        b.append(int(match.group(2)))
+    return a, b
+
+
+def test_2024_d1_2():
+    a, b = parse_2024_d1()
+    assert similarity(a, b) == 26674158
+
+
+def test_2024_d1_1():
+    a, b = parse_2024_d1()
+    assert distance(a, b) == 1830467
+
+
 @pytest.mark.parametrize(
     ("a", "b", "expected"),
     (  # format
@@ -217,6 +249,30 @@ def times_two(x: int) -> int:
 )
 def test_hello_world(input: int, expected: int) -> None:
     assert times_two(input) == expected
+
+
+def load_input(year: int, day: int) -> str | None:
+    """
+    Load the contents of an Advent of Code input file for the given year and day.
+
+    Args:
+        year (int): The year of the puzzle
+        day (int): The day of the puzzle
+
+    Returns:
+        str | None: The contents of the input file if it exists, None otherwise
+    """
+    # Get the directory containing the current file
+    current_dir = Path(os.path.dirname(os.path.abspath(__file__)))
+
+    # Construct the path to the input file
+    input_path = current_dir / "../aoc_inputs" / f"{year}_d{day}.input"
+    print(input_path)
+    # Check if the file exists and return its contents if it does
+    if input_path.exists():
+        return input_path.read_text().strip()
+
+    return None
 
 
 # Allows invocation as a main file, e.g. if using inside coderpad or similar
