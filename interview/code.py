@@ -1,7 +1,9 @@
+import heapq
 import os
 import re
 from collections import Counter, defaultdict
 from collections.abc import Iterable
+from dataclasses import dataclass, field
 from pathlib import Path
 
 import more_itertools
@@ -31,7 +33,7 @@ EXAMPLE_D4 = """47|53
 53|13"""
 
 
-def is_ordered(rules: list[list[int, int]], updates: list[int]):
+def is_ordered(rules: list[list[int]], updates: list[int]):
     not_after: dict[int, set[int]] = defaultdict(lambda: set())
     for a, b in rules:
         not_after[a].add(b)
@@ -42,6 +44,55 @@ def is_ordered(rules: list[list[int, int]], updates: list[int]):
             return False
         seen.add(update)
     return True
+
+
+@dataclass
+class DayFiveNode:
+    value: int
+    index: int
+    before: set[int] = field(default_factory=set)
+    after: set[int] = field(default_factory=set)
+
+    def __lt__(self, other):
+        return self.index < other.index
+
+
+def reorder(rules: list[list[int]], updates: list[int]):
+    nodes: dict[int, DayFiveNode] = {}
+
+    for index, value in enumerate(updates):
+        n = DayFiveNode(value=value, index=index)
+        nodes[value] = n
+
+    for src, dst in rules:
+        if src in nodes and dst in nodes:
+            nodes[dst].before.add(src)
+            nodes[src].after.add(dst)
+
+    result: list[int] = []
+    heap = [(n.index, n) for n in nodes.values() if not n.before]
+    heapq.heapify(heap)
+
+    while heap:
+        target = heapq.heappop(heap)[1]
+        result.append(target.value)
+        for value in target.after:
+            node = nodes[value]
+            node.before.remove(target.value)
+            if not node.before:
+                heapq.heappush(heap, (node.index, node))
+
+    return result
+
+
+@pytest.mark.parametrize(
+    ("raw_rules", "raw_updates", "expected"),
+    (("1|2", "2,1", [1, 2]),),
+)
+def test_reordering(raw_rules, raw_updates, expected):
+    rules = [list(map(int, l.split("|"))) for l in raw_rules.split("\n")]
+    updates = list(map(int, raw_updates.split(",")))
+    assert reorder(rules, updates) == expected
 
 
 @pytest.mark.parametrize(
@@ -67,6 +118,15 @@ def compute_d5_from_raw(s: str) -> int:
 def test_2024_d5_1():
     data = load_input(2024, 5)
     assert compute_d5_from_raw(data) == 6612
+
+
+def test_2024_d5_2():
+    data = load_input(2024, 5)
+    raw_rules, raw_updates = data.split("\n\n")
+    rules = [list(map(int, l.split("|"))) for l in raw_rules.split("\n")]
+    updates = [list(map(int, raw_update.split(","))) for raw_update in raw_updates.split("\n")]
+    bad_updates = [reorder(rules, u) for u in updates if not is_ordered(rules, u)]
+    assert sum(u[int(len(u) / 2)] for u in bad_updates) == 4944
 
 
 # AOC 2024 day 4
