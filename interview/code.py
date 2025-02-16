@@ -9,6 +9,105 @@ from pathlib import Path
 import more_itertools
 import pytest
 
+# AOC 2024 day 7
+EXAMPLE_D7 = """190: 10 19
+3267: 81 40 27
+83: 17 5
+156: 15 6
+7290: 6 8 6 15
+161011: 16 10 13
+192: 17 8 14
+21037: 9 7 18 13
+292: 11 6 16 20"""
+
+
+@dataclass
+class DaySevenEntry:
+    target: int
+    values: list[int]
+
+
+def parse_d7(input: str) -> list[DaySevenEntry]:
+    def parse_line(line):
+        x, y = line.split(": ")
+        return DaySevenEntry(target=int(x), values=list(map(int, y.split(" "))))
+
+    return [parse_line(l) for l in input.split("\n")]
+
+
+def can_make(target: int, values: list[int], index: int, concat: bool = False) -> bool:
+    if index == len(values) - 1:
+        return values[index] == target
+
+    old = values[index + 1]
+    candidates = [old + values[index], old * values[index]]
+
+    if concat:
+        mult = 10 ** (len(str(old)))
+        candidates.append(mult * values[index] + old)
+
+    for candidate in candidates:
+        values[index + 1] = candidate
+        if can_make(target, values, index + 1, concat=concat):
+            values[index + 1] = old
+            return True
+
+    values[index + 1] = old
+    return False
+
+
+@pytest.mark.parametrize(
+    ("s", "expected"),
+    (  # format
+        ("190: 10 19", True),
+        ("83: 17 5", False),
+    ),
+)
+def test_can_make(s, expected):
+    n = parse_d7(s)[0]
+    assert can_make(n.target, n.values, 0) == expected
+
+
+@pytest.mark.parametrize(
+    ("s", "concat", "expected"),
+    (  # format
+        (EXAMPLE_D7, False, 3749),
+        (EXAMPLE_D7, True, 11387),
+        (EXAMPLE_D7.split("\n")[4], True, 7290),
+    ),
+)
+def test_2024_d7_misc(s, concat, expected):
+    nodes = parse_d7(s)
+    assert sum(n.target for n in nodes if can_make(n.target, n.values, 0, concat=concat)) == expected
+
+
+def test_2024_d7_1():
+    data = load_input(2024, 7)
+    nodes = parse_d7(data)
+    assert sum(n.target for n in nodes if can_make(n.target, n.values, 0)) == 6083020304036
+
+
+# Slow
+# def test_2024_d7_2():
+#     data = load_input(2024, 7)
+#     nodes = parse_d7(data)
+#     assert sum(n.target for n in nodes if can_make(n.target, n.values, 0, concat=True)) == 59002246504791
+
+
+# AOC 2024 day 6
+
+EXAMPLE_D6 = """....#.....
+.........#
+..........
+..#.......
+.......#..
+..........
+.#..^.....
+........#.
+#.........
+......#..."""
+
+
 # AOC 2024 day 5
 EXAMPLE_D4 = """47|53
 97|13
