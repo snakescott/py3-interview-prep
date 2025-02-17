@@ -9,6 +9,131 @@ import more_itertools
 import pytest
 from boltons.queueutils import PriorityQueue  # type: ignore[import-untyped]
 
+# AOC 2024 day 10
+# seems like a graph search problem, constraints on grid edges
+# one option is to propogate the number of paths ending at 9
+
+
+@dataclass
+@dataclass
+class DayTenValue:
+    elevation: int
+    peaks: set[int]
+
+    def __init__(self, elevation, location):
+        self.elevation = elevation
+        self.peaks = set()
+        if elevation == 9:
+            self.peaks.add(location)
+
+
+class Day10Graph(defaultdict[complex, DayTenValue]):
+    pass
+
+
+DAY_10_DELTAS = [-1, 1, -1j, 1j]
+
+
+def day10_parse(s: str) -> Day10Graph:
+    g = Day10Graph()
+    rows = s.split("\n")
+    for y, row in enumerate(rows):
+        for x, elevation in enumerate(row):
+            location = x + 1j * y
+            g[location] = DayTenValue(elevation=int(elevation), location=location)
+    return g
+
+
+def trailhead_scores(g: Day10Graph) -> list[int]:
+    by_elevation: dict[int, Day10Graph] = defaultdict(lambda: Day10Graph())
+    for k, v in g.items():
+        by_elevation[v.elevation][k] = v
+
+    for elevation in range(9, 0, -1):
+        current_level = by_elevation[elevation]
+        descent_level = by_elevation[elevation - 1]
+        for position, value in current_level.items():
+            for delta in DAY_10_DELTAS:
+                if position + delta in descent_level:
+                    descent_level[position + delta].peaks |= value.peaks
+    return [len(v.peaks) for v in by_elevation[0].values()]
+
+
+@dataclass
+@dataclass
+class DayTenBValue:
+    elevation: int
+    paths: int
+
+    def __init__(self, elevation, location):
+        self.elevation = elevation
+        self.paths = 0
+        if elevation == 9:
+            self.paths = 1
+
+
+class Day10BGraph(defaultdict[complex, DayTenBValue]):
+    pass
+
+
+def day10b_parse(s: str) -> Day10BGraph:
+    g = Day10BGraph()
+    rows = s.split("\n")
+    for y, row in enumerate(rows):
+        for x, elevation in enumerate(row):
+            location = x + 1j * y
+            g[location] = DayTenBValue(elevation=int(elevation), location=location)
+    return g
+
+
+def trailhead_b_scores(g: Day10BGraph) -> list[int]:
+    by_elevation: dict[int, Day10BGraph] = defaultdict(lambda: Day10BGraph())
+    for k, v in g.items():
+        by_elevation[v.elevation][k] = v
+
+    for elevation in range(9, 0, -1):
+        current_level = by_elevation[elevation]
+        descent_level = by_elevation[elevation - 1]
+        for position, value in current_level.items():
+            for delta in DAY_10_DELTAS:
+                if position + delta in descent_level:
+                    descent_level[position + delta].paths += value.paths
+    return [v.paths for v in by_elevation[0].values()]
+
+
+DAY10_EXAMPLE = """89010123
+78121874
+87430965
+96549874
+45678903
+32019012
+01329801
+10456732"""
+
+
+@pytest.mark.parametrize(
+    ("s", "expected"),
+    (  # format
+        (DAY10_EXAMPLE, 36),
+    ),
+)
+def test_trails(s, expected):
+    g = day10_parse(s)
+    assert sum(trailhead_scores(g)) == expected
+
+
+def test_2024_d10_1():
+    data = load_input(2024, 10)
+    g = day10b_parse(data)
+    assert sum(trailhead_b_scores(g)) == 489
+
+
+def test_2024_d10_2():
+    data = load_input(2024, 10)
+    g = day10_parse(data)
+    assert sum(trailhead_scores(g)) == 1086
+
+
 # AOC 2024 day 7
 EXAMPLE_D7 = """190: 10 19
 3267: 81 40 27
