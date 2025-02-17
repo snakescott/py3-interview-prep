@@ -1,4 +1,3 @@
-import heapq
 import os
 import re
 from collections import Counter, defaultdict
@@ -8,6 +7,7 @@ from pathlib import Path
 
 import more_itertools
 import pytest
+from boltons.queueutils import PriorityQueue  # type: ignore[import-untyped]
 
 # AOC 2024 day 7
 EXAMPLE_D7 = """190: 10 19
@@ -155,6 +155,9 @@ class DayFiveNode:
     def __lt__(self, other):
         return self.index < other.index
 
+    def __hash__(self):
+        return hash((self.value, self.index))
+
 
 def reorder(rules: list[list[int]], updates: list[int]):
     nodes: dict[int, DayFiveNode] = {}
@@ -169,17 +172,19 @@ def reorder(rules: list[list[int]], updates: list[int]):
             nodes[src].after.add(dst)
 
     result: list[int] = []
-    heap = [(n.index, n) for n in nodes.values() if not n.before]
-    heapq.heapify(heap)
+    pq = PriorityQueue()
+    for n in nodes.values():
+        if not n.before:
+            pq.add((n.index, n))
 
-    while heap:
-        target = heapq.heappop(heap)[1]
+    while pq:
+        target = pq.pop()[1]
         result.append(target.value)
         for value in target.after:
             node = nodes[value]
             node.before.remove(target.value)
             if not node.before:
-                heapq.heappush(heap, (node.index, node))
+                pq.add((node.index, node))
 
     return result
 

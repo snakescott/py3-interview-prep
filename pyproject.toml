@@ -7,6 +7,7 @@ license = {file="LICENSE"}
 readme = "README.md"
 requires-python = ">= 3.12"
 dependencies = [
+    "boltons>=25.0.0",
     "more-itertools>=10.6.0",
     "mypy>=1.15.0",
 ]
