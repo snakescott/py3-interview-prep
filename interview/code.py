@@ -3,18 +3,156 @@ import re
 from collections import Counter, defaultdict
 from collections.abc import Iterable
 from dataclasses import dataclass, field
+from functools import reduce
+from operator import mul
 from pathlib import Path
 
 import more_itertools
 import pytest
 from boltons.queueutils import PriorityQueue  # type: ignore[import-untyped]
 
+# AOC 2023 day 2
+# going to be about parsing and data representation mostly
+
+
+@dataclass
+class Day2Reveal:
+    groups: dict[str, int]
+
+    @staticmethod
+    def parse(s: str) -> "Day2Reveal":
+        cubes = s.split(", ")
+        groups: dict[str, int] = defaultdict(lambda: 0)
+        for c in cubes:
+            parts = c.split(" ")
+            count = int(parts[0])
+            color = parts[1]
+            groups[color] = count
+        return Day2Reveal(groups=groups)
+
+    def power(self):
+        return reduce(mul, [self.groups["blue"], self.groups["green"], self.groups["red"]])
+
+
+@dataclass
+class Day2Game:
+    game_id: int
+    reveals: list[Day2Reveal]
+
+    @staticmethod
+    def parse(s: str) -> "Day2Game":
+        parts = s.split(": ")
+        game_id = int(parts[0].split(" ")[1])
+        reveals = parts[1].split("; ")
+        return Day2Game(game_id=game_id, reveals=[Day2Reveal.parse(r) for r in reveals])
+
+    def possible(self, cubes: Day2Reveal) -> bool:
+        return all(all(r.groups[color] <= cubes.groups[color] for color in cubes.groups.keys()) for r in self.reveals)
+
+    def fewest(self) -> Day2Reveal:
+        groups: dict[str, int] = defaultdict(lambda: 0)
+        for r in self.reveals:
+            for color, count in r.groups.items():
+                groups[color] = max(groups[color], count)
+        return Day2Reveal(groups)
+
+
+@pytest.mark.parametrize(
+    ("input", "expected"),
+    (  # format
+        ("Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green", True),
+        ("Game 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red", False),
+    ),
+)
+def test_day2_game(input, expected):
+    cubes = Day2Reveal({"red": 12, "green": 13, "blue": 14})
+    game = Day2Game.parse(input)
+    assert game.possible(cubes) == expected
+
+
+def test_2023_d2_1():
+    data = load_input(2023, 2)
+    cubes = Day2Reveal({"red": 12, "green": 13, "blue": 14})
+    games = [Day2Game.parse(l) for l in data.split("\n")]
+    result = sum(game.game_id for game in games if game.possible(cubes))
+    assert result == 2268
+
+
+def test_2023_d2_2():
+    data = load_input(2023, 2)
+    games = [Day2Game.parse(l) for l in data.split("\n")]
+    result = sum(game.fewest().power() for game in games)
+    assert result == 63542
+
+
+# AOC 2023 day 1
+
+
+def calibration_value(s: str) -> int:
+    def _first_digit(idx_it):
+        for idx in idx_it:
+            if s[idx] >= "0" and s[idx] <= "9":
+                return int(s[idx])
+        raise Exception("foo")
+
+    return _first_digit(range(0, len(s))) * 10 + _first_digit(range(len(s) - 1, -1, -1))
+
+
+ENGLISH = {
+    "one": 1,
+    "two": 2,
+    "three": 3,
+    "four": 4,
+    "five": 5,
+    "six": 6,
+    "seven": 7,
+    "eight": 8,
+    "nine": 9,
+}
+
+ENGLISH_BACKWARDS = {"".join(reversed(k)): v for k, v in ENGLISH.items()}
+
+
+def calibration_value2(s: str) -> int:
+    def _first_digit(inner: str, english: dict[str, int]):
+        for idx in range(len(inner)):
+            if inner[idx] >= "0" and inner[idx] <= "9":
+                return int(inner[idx])
+            for k, v in english.items():
+                # slice makes a copy, RIP
+                if inner[idx:].startswith(k):
+                    return v
+        raise Exception("foo")
+
+    return _first_digit(s, ENGLISH) * 10 + _first_digit("".join(reversed(s)), ENGLISH_BACKWARDS)
+
+
+@pytest.mark.parametrize(
+    ("input", "expected"),
+    (  # format
+        ("1abc2", 12),
+        ("pqr3stu8vwx", 38),
+    ),
+)
+def test_calibration_value(input, expected):
+    assert calibration_value(input) == expected
+
+
+def test_2023_d1_1():
+    data = load_input(2023, 1)
+    assert (sum(calibration_value(s) for s in data.split("\n"))) == 54708
+
+
+def test_2023_d1_2():
+    data = load_input(2023, 1)
+    assert (sum(calibration_value2(s) for s in data.split("\n"))) == 54087
+
+
 # AOC 2024 day 10
 # seems like a graph search problem, constraints on grid edges
 # one option is to propogate the number of paths ending at 9
 
 
-@dataclass
 @dataclass
 class DayTenValue:
     elevation: int
@@ -122,16 +260,16 @@ def test_trails(s, expected):
     assert sum(trailhead_scores(g)) == expected
 
 
-def test_2024_d10_1():
-    data = load_input(2024, 10)
-    g = day10b_parse(data)
-    assert sum(trailhead_b_scores(g)) == 489
-
-
 def test_2024_d10_2():
     data = load_input(2024, 10)
+    g = day10b_parse(data)
+    assert sum(trailhead_b_scores(g)) == 1086
+
+
+def test_2024_d10_1():
+    data = load_input(2024, 10)
     g = day10_parse(data)
-    assert sum(trailhead_scores(g)) == 1086
+    assert sum(trailhead_scores(g)) == 489
 
 
 # AOC 2024 day 7
