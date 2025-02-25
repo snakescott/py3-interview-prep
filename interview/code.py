@@ -11,6 +11,190 @@ import more_itertools
 import pytest
 from boltons.queueutils import PriorityQueue  # type: ignore[import-untyped]
 
+EIGHT_DELTA = [-1 - 1j, -1, -1 + 1j, -1j, 1j, 1 - 1j, 1, 1 + 1j]
+
+
+# AOC 2023 day 4
+@dataclass
+class Day4Card:
+    id_: int
+    picks: set[int]
+    winners: set[int]
+
+    @staticmethod
+    def parse(s: str) -> "Day4Card":
+        parts = s.split(":")
+        id_ = int(parts[0].split()[-1])
+        raw_picks, raw_winners = parts[1].split("|")
+        picks = set(map(int, raw_picks.split()))
+        winners = set(map(int, raw_winners.split()))
+        return Day4Card(id_=id_, picks=picks, winners=winners)
+
+    def score(self) -> int:
+        shared = self.picks.intersection(self.winners)
+        if len(shared) == 0:
+            return 0
+        else:
+            return 2 ** (len(shared) - 1)
+
+    def lucky(self):
+        return len(self.picks.intersection(self.winners))
+
+    @staticmethod
+    def total(cards: "list[Day4Card]") -> int:
+        counts = [1 for i in range(0, len(cards))]
+        for idx in range(0, len(cards)):
+            count = counts[idx]
+            card = cards[idx]
+            for i in range(1, card.lucky() + 1):
+                inc_idx = idx + i
+                if inc_idx < len(counts):
+                    counts[inc_idx] += count
+        return sum(counts)
+
+
+def test_2023_d4_1():
+    input = load_input(2023, 4)
+    rows = input.split("\n")
+    cards = [Day4Card.parse(r) for r in rows]
+    assert sum(c.score() for c in cards) == 19135
+
+
+def test_2023_d4_2():
+    input = load_input(2023, 4)
+    rows = input.split("\n")
+    cards = [Day4Card.parse(r) for r in rows]
+    assert Day4Card.total(cards) == 5704953
+
+
+# AOC 2023 day 3
+# Somewhat complex, need to build integers out of strings but also find adjacent symbols
+# Approach: parse numbers with metadata, parse symbols, check
+
+Day3_1_EXAMPLE = """467..114..
+...*......
+..35..633.
+......#...
+617*......
+.....+.58.
+..592.....
+......755.
+...$.*....
+.664.598.."""
+
+
+@dataclass
+class Day3Number:
+    value: int
+    row: int
+    start_col: int
+    end_col: int
+
+    @staticmethod
+    def parse(row: int, s: str, start: int) -> "Day3Number | None":
+        s = s + "."
+        start_col: int | None = None
+        value = 0
+        i = 0
+        for i in range(start, len(s)):
+            ch = s[i]
+            is_number = ch >= "0" and ch <= "9"
+            if is_number and start_col is not None:
+                value = value * 10 + int(ch)
+            elif start_col is not None:
+                break
+            elif is_number:
+                value = int(ch)
+                start_col = i
+
+        if start_col is not None:
+            return Day3Number(value=value, row=row, start_col=start_col, end_col=i)
+        return None
+
+    @staticmethod
+    def parse_all(rows: list[str]) -> "list[Day3Number]":
+        numbers: list[Day3Number] = []
+        for rid, row in enumerate(rows):
+            cid = 0
+            _next = Day3Number.parse(rid, row, cid)
+            while _next is not None:
+                numbers.append(_next)
+                cid = _next.end_col
+                _next = Day3Number.parse(rid, row, cid)
+
+        return numbers
+
+
+def find_symbols(schematic: list[str]) -> set[complex]:
+    result: set[complex] = set()
+    for rid, row in enumerate(schematic):
+        for cid, ch in enumerate(row):
+            if (ch < "0" or ch > "9") and ch != ".":
+                result.add(rid + 1j * cid)
+    return result
+
+
+def is_part_number(n: Day3Number, symbols: set[complex]) -> bool:
+    for cid in range(n.start_col, n.end_col):
+        pos = n.row + 1j * cid
+        for delta in EIGHT_DELTA:
+            if pos + delta in symbols:
+                return True
+    return False
+
+
+def adjacent_symbols(n: Day3Number, symbols: set[complex]) -> set[complex]:
+    result: set[complex] = set()
+    for cid in range(n.start_col, n.end_col):
+        pos = n.row + 1j * cid
+        for delta in EIGHT_DELTA:
+            if pos + delta in symbols:
+                result.add(pos + delta)
+    return result
+
+
+def all_adjacent_part_numbers(numbers: list[Day3Number], symbols: set[complex]) -> dict[complex, list[Day3Number]]:
+    result: defaultdict[complex, list[Day3Number]] = defaultdict(lambda: [])
+    for n in numbers:
+        for symbol in adjacent_symbols(n, symbols):
+            result[symbol].append(n)
+    return result
+
+
+@pytest.mark.parametrize(
+    ("input", "expected"),
+    (  # format
+        (Day3_1_EXAMPLE, 4361),
+    ),
+)
+def test_day3_misc(input, expected):
+    rows = input.split("\n")
+    numbers = Day3Number.parse_all(rows)
+    symbols = find_symbols(rows)
+    assert sum(n.value for n in numbers if is_part_number(n, symbols)) == expected
+
+
+def test_2023_d3_1():
+    input = load_input(2023, 3)
+    rows = input.split("\n")
+    numbers = Day3Number.parse_all(rows)
+    symbols = find_symbols(rows)
+    assert sum(n.value for n in numbers if is_part_number(n, symbols)) == 527364
+
+
+def test_2023_d3_1():
+    input = load_input(2023, 3)
+    rows = input.split("\n")
+    numbers = Day3Number.parse_all(rows)
+    symbols = find_symbols(rows)
+    misc = all_adjacent_part_numbers(numbers, symbols)
+    value = 0
+    for symbol, numbers in misc.items():
+        if len(numbers) == 2:
+            value += numbers[0].value * numbers[1].value
+    assert value == 79026871
+
+
 # AOC 2023 day 2
 # going to be about parsing and data representation mostly
 
