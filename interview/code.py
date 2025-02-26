@@ -1,6 +1,6 @@
 import os
 import re
-from collections import Counter, defaultdict
+from collections import Counter, defaultdict, namedtuple
 from collections.abc import Iterable
 from dataclasses import dataclass, field
 from functools import reduce
@@ -14,6 +14,123 @@ from boltons.queueutils import PriorityQueue  # type: ignore[import-untyped]
 EIGHT_DELTA = [-1 - 1j, -1, -1 + 1j, -1j, 1j, 1 - 1j, 1, 1 + 1j]
 
 
+# AOC 2023 day 5
+Day5Range = namedtuple("Day5Range", ["start", "length", "delta"])
+
+DAY5_KEY_SEQUENCE = [
+    "seed-to-soil",
+    "soil-to-fertilizer",
+    "fertilizer-to-water",
+    "water-to-light",
+    "light-to-temperature",
+    "temperature-to-humidity",
+    "humidity-to-location",
+]
+
+DAY5_EXAMPLE1 = """seeds: 79 14 55 13
+
+seed-to-soil map:
+50 98 2
+52 50 48
+
+soil-to-fertilizer map:
+0 15 37
+37 52 2
+39 0 15
+
+fertilizer-to-water map:
+49 53 8
+0 11 42
+42 0 7
+57 7 4
+
+water-to-light map:
+88 18 7
+18 25 70
+
+light-to-temperature map:
+45 77 23
+81 45 19
+68 64 13
+
+temperature-to-humidity map:
+0 69 1
+1 0 69
+
+humidity-to-location map:
+60 56 37
+56 93 4"""
+
+
+@dataclass
+class Day5Almanac:
+    seeds: list[int]
+    maps: dict[str, list[Day5Range]]
+
+    def seed_to_location(self, seed: int):
+        current = seed
+        for key in DAY5_KEY_SEQUENCE:
+            ranges = self.maps[key]
+            # Can do log(n) with binary search
+            for idx in range(len(ranges) - 1, -1, -1):
+                d5range = ranges[idx]
+                if current >= d5range.start:
+                    if current < d5range.start + ranges[idx].length:
+                        current += d5range.delta
+                    break
+        return current
+
+    @staticmethod
+    def parse(s: str) -> "Day5Almanac":
+        seed_line, _, rest = s.partition("\n\n")
+        seed_line = seed_line.partition("seeds: ")[2]
+        seeds = [int(part) for part in seed_line.split()]
+        maps: dict[str, list[Day5Range]] = {}
+        raw_maps = rest.split("\n\n")
+        max_length = -1
+        for m in raw_maps:
+            first_line, _, rest = m.partition("\n")
+            lines = rest.split("\n")
+
+            key = first_line.split(" ")[0]
+            ranges: list[Day5Range] = []
+            for line in lines:
+                parts = line.split()
+                dest, start, length = int(parts[0]), int(parts[1]), int(parts[2])
+                ranges.append(Day5Range(start, length, dest - start))
+
+            maps[key] = sorted(ranges)
+        return Day5Almanac(seeds=seeds, maps=maps)
+
+
+# PART TWO RANGE OPERATIONS
+
+
+@pytest.mark.parametrize(
+    ("input", "seeds", "locations"),
+    (  # format
+        (DAY5_EXAMPLE1, [79, 14, 55, 13], [82, 43, 86, 35]),
+    ),
+)
+def test_day5_misc(input, seeds, locations):
+    almanac = Day5Almanac.parse(input)
+    for s, l in zip(seeds, locations, strict=False):
+        assert almanac.seed_to_location(s) == l
+
+
+def test_2023_d5_1():
+    input = load_input(2023, 5)
+    almanac = Day5Almanac.parse(input)
+    seeds = set(almanac.seeds)
+    locations = set(almanac.seed_to_location(s) for s in seeds)
+    target = min(locations)
+    assert target == 621354867
+
+
+def test_2023_d5_2():
+    pass
+
+
 # AOC 2023 day 4
 @dataclass
 class Day4Card:
@@ -21,6 +138,7 @@ class Day4Card:
     picks: set[int]
     winners: set[int]
 
+    # # parse e.g. "Card 1: 41 48 83 86 17 | 83 86  6 31 17  9 48 53"
     @staticmethod
     def parse(s: str) -> "Day4Card":
         parts = s.split(":")
