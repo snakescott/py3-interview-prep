@@ -62,6 +62,28 @@ humidity-to-location map:
 56 93 4"""
 
 
+def parse_2023d5(s: str) -> tuple[list[int], dict[str, list[Day5Range]]]:
+    seed_line, _, rest = s.partition("\n\n")
+    seed_line = seed_line.partition("seeds: ")[2]
+    seeds = [int(part) for part in seed_line.split()]
+    maps: dict[str, list[Day5Range]] = {}
+    raw_maps = rest.split("\n\n")
+    max_length = -1
+    for m in raw_maps:
+        first_line, _, rest = m.partition("\n")
+        lines = rest.split("\n")
+
+        key = first_line.split(" ")[0]
+        ranges: list[Day5Range] = []
+        for line in lines:
+            parts = line.split()
+            dest, start, length = int(parts[0]), int(parts[1]), int(parts[2])
+            ranges.append(Day5Range(start, length, dest - start))
+
+        maps[key] = sorted(ranges)
+    return (seeds, maps)
+
+
 @dataclass
 class Day5Almanac:
     seeds: list[int]
@@ -82,24 +104,7 @@ class Day5Almanac:
 
     @staticmethod
     def parse(s: str) -> "Day5Almanac":
-        seed_line, _, rest = s.partition("\n\n")
-        seed_line = seed_line.partition("seeds: ")[2]
-        seeds = [int(part) for part in seed_line.split()]
-        maps: dict[str, list[Day5Range]] = {}
-        raw_maps = rest.split("\n\n")
-        max_length = -1
-        for m in raw_maps:
-            first_line, _, rest = m.partition("\n")
-            lines = rest.split("\n")
-
-            key = first_line.split(" ")[0]
-            ranges: list[Day5Range] = []
-            for line in lines:
-                parts = line.split()
-                dest, start, length = int(parts[0]), int(parts[1]), int(parts[2])
-                ranges.append(Day5Range(start, length, dest - start))
-
-            maps[key] = sorted(ranges)
+        seeds, maps = parse_2023d5(s)
         return Day5Almanac(seeds=seeds, maps=maps)
 
 
