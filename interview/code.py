@@ -13,9 +13,76 @@ from boltons.queueutils import PriorityQueue  # type: ignore[import-untyped]
 
 EIGHT_DELTA = [-1 - 1j, -1, -1 + 1j, -1j, 1j, 1 - 1j, 1, 1 + 1j]
 
+# AOC 2023 day 6
+# ugh can binary search this
+
+
+# RIP, chatgpt code here
+def find_first_true(a, b, f):
+    """Finds the first index where f(x) is True in a monotonically increasing function."""
+    left, right = a, b
+    result = -1
+
+    while left <= right:
+        mid = (left + right) // 2
+        if f(mid):
+            result = mid
+            right = mid - 1  # Search for smaller valid x
+        else:
+            left = mid + 1  # Search for first True
+
+    return result  # Smallest x where f(x) is True, or -1 if none exist
+
+
+def find_last_true(a, b, f):
+    """Finds the last index where f(x) is True in a monotonically decreasing function."""
+    first_false = find_first_true(a, b, lambda x: not f(x))  # Find first False in f(x)
+
+    if first_false == -1:
+        return b if f(b) else -1  # If no False found, return b if True, else -1
+
+    return first_false - 1  # The last True is just before the first False
+
+
+# end chatgpt code
+
+
+def num_ways(time: int, record: int) -> int:
+    first_true = find_first_true(0, time // 2, lambda x: x * (time - x) > record)
+    last_true = find_last_true(time // 2, time, lambda x: x * (time - x) > record)
+    return last_true - first_true + 1
+
+
+def num_ways_old(time: int, record: int) -> int:
+    result = 0
+    min_x = 1000
+    max_x = 0
+    for i in range(0, record):
+        if i * (time - i) > record:
+            result += 1
+            min_x = min(min_x, i)
+            max_x = max(max_x, i)
+    return result
+
+
+def test_2023_d6_1():
+    input = load_input(2023, 6).split("\n")
+    times = map(int, input[0].split()[1:])
+    records = map(int, input[1].split()[1:])
+    ways = [num_ways(t, r) for t, r in zip(times, records, strict=False)]
+    assert reduce(mul, ways) == 1195150
+
+
+def test_2023_d6_2():
+    input = load_input(2023, 6).split("\n")
+    time = int("".join(input[0].split()[1:]))
+    record = int("".join(input[1].split()[1:]))
+    assert num_ways(time, record) == 42550411
+
 
 # AOC 2023 day 5
 Day5Range = namedtuple("Day5Range", ["start", "length", "delta"])
+Day5SimpleRange = namedtuple("Day5SimpleRange", ["start", "length"])
 
 DAY5_KEY_SEQUENCE = [
     "seed-to-soil",
@@ -109,6 +176,9 @@ class Day5Almanac:
 
 
 # PART TWO RANGE OPERATIONS
+def day5_transform_ranges(simple_ranges: list[Day5SimpleRange], map_ranges: list[Day5Range]) -> list[Day5SimpleRange]:
+    results: list[Day5SimpleRange] = []
+    return results
 
 
 @pytest.mark.parametrize(
